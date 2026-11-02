@@ -1,11 +1,14 @@
 /**
  * DATA SERVICE
- * Satu-satunya modul yang mengakses penyimpanan (localStorage).
+ * Satu-satunya modul yang mengakses penyimpanan (localStorage): produk & pesanan.
  * Tidak menyentuh DOM. Semua method async agar mudah diganti ke API/fetch.
  */
-const STORAGE_KEY = 'katalog-umkm-tani:v1';
+const KEY_PRODUK = 'katalog-umkm-tani:v1';
+const KEY_PESANAN = 'katalog-umkm-tani:pesanan:v1';
 
 export const KATEGORI = ['Sayuran', 'Buah', 'Beras & Serealia', 'Rempah', 'Olahan'];
+const STATUS = ['Menunggu', 'Dikirim', 'Selesai'];
+export const STOK_MENIPIS = 10;
 
 const SEED = [
   { nama: 'Cabai Rawit Merah', kategori: 'Rempah', harga: 45000, stok: 30, satuan: 'kg', penjual: 'Tani Makmur Kaliurang', kontak: '081234567801', deskripsi: 'Cabai rawit segar dipetik pagi hari, pedas mantap.' },
@@ -18,43 +21,80 @@ const SEED = [
 const wait = () => new Promise((r) => setTimeout(r, 0));
 const newId = () => (globalThis.crypto?.randomUUID?.() ?? `id-${Date.now()}-${Math.random().toString(16).slice(2)}`);
 
-function write(list) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch { /* storage penuh/diblokir */ }
+function save(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage penuh/diblokir */ }
 }
-
-function read() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch { /* data rusak -> pakai seed */ }
+function load(key) {
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch { return null; }
+}
+function readProduk() {
+  const data = load(KEY_PRODUK);
+  if (data) return data;
   const seeded = SEED.map((p, i) => ({ ...p, id: newId(), createdAt: Date.now() - i * 1000 }));
-  write(seeded);
+  save(KEY_PRODUK, seeded);
   return seeded;
 }
+const readPesanan = () => load(KEY_PESANAN) ?? [];
 
 export const dataService = {
-  async getAll() { await wait(); return read(); },
-
+  /* ----- Produk ----- */
+  async getAll() { await wait(); return readProduk(); },
   async getById(id) { return (await this.getAll()).find((p) => p.id === id) ?? null; },
 
   async create(data) {
     const item = { ...data, id: newId(), createdAt: Date.now() };
-    write([item, ...read()]);
+    save(KEY_PRODUK, [item, ...readProduk()]);
     return item;
   },
 
   async update(id, data) {
-    const list = read();
+    const list = readProduk();
     const idx = list.findIndex((p) => p.id === id);
     if (idx === -1) throw new Error('Produk tidak ditemukan.');
     list[idx] = { ...list[idx], ...data, id };
-    write(list);
+    save(KEY_PRODUK, list);
     return list[idx];
   },
 
-  async remove(id) { write(read().filter((p) => p.id !== id)); },
+  async remove(id) { save(KEY_PRODUK, readProduk().filter((p) => p.id !== id)); },
 
-  /** Cari, saring, dan urutkan (logika data, bukan tampilan). */
+  /* ----- Pesanan ----- */
+  async getOrders() { await wait(); return readPesanan(); },
+
+  /** Buat pesanan + kurangi stok secara atomik. Melempar error jika stok tidak cukup. */
+  async createOrder({ productId, jumlah, pembeli }) {
+    const list = readProduk();
+    const idx = list.findIndex((p) => p.id === productId);
+    if (idx === -1) throw new Error('Produk tidak ditemukan atau sudah dihapus.');
+    const p = list[idx];
+    if (jumlah > p.stok) throw new Error(`Stok tidak cukup. Sisa ${p.stok} ${p.satuan}.`);
+
+    list[idx] = { ...p, stok: p.stok - jumlah };
+    const order = {
+      id: `ORD-${Date.now().toString(36).toUpperCase()}`,
+      tanggal: Date.now(),
+      produkId: p.id, namaProduk: p.nama, satuan: p.satuan, harga: p.harga,
+      jumlah, total: p.harga * jumlah,
+      nama: pembeli.nama, email: pembeli.email, alamat: pembeli.alamat, metode: pembeli.metode,
+      status: STATUS[0],
+    };
+    save(KEY_PRODUK, list);
+    save(KEY_PESANAN, [order, ...readPesanan()]);
+    return order;
+  },
+
+  nextStatus(status) { return STATUS[STATUS.indexOf(status) + 1] ?? null; },
+
+  async advanceOrder(id) {
+    const orders = readPesanan();
+    const o = orders.find((x) => x.id === id);
+    const next = o && this.nextStatus(o.status);
+    if (!next) return;
+    o.status = next;
+    save(KEY_PESANAN, orders);
+  },
+
+  /* ----- Query & ringkasan ----- */
   query(list, { keyword = '', kategori = '', urutan = 'terbaru' } = {}) {
     const k = keyword.trim().toLowerCase();
     const hasil = list.filter((p) =>
@@ -69,12 +109,12 @@ export const dataService = {
     return sorter ? hasil.sort(sorter) : hasil;
   },
 
-  summarize(list) {
+  summarize(list, orders) {
     return {
       total: list.length,
-      tersedia: list.filter((p) => p.stok > 0).length,
-      penjual: new Set(list.map((p) => p.penjual.toLowerCase())).size,
-      kategori: new Set(list.map((p) => p.kategori)).size,
+      menipis: list.filter((p) => p.stok < STOK_MENIPIS).length,
+      pesanan: orders.length,
+      pendapatan: orders.reduce((s, o) => s + o.total, 0),
     };
   },
 };

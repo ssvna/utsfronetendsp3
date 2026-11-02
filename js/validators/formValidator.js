@@ -74,3 +74,50 @@ export function validateProduct(raw) {
   const data = valid ? { ...clean, harga: Number(clean.harga), stok: Number(clean.stok) } : null;
   return { valid, errors, data };
 }
+
+/* ===================== VALIDASI CHECKOUT ===================== */
+export const METODE_BAYAR = ['Transfer Bank', 'QRIS', 'E-Wallet', 'Bayar di Tempat (COD)'];
+const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+const checkoutRules = {
+  nama(v) {
+    if (!v) return 'Nama lengkap wajib diisi.';
+    if (v.length < 3) return 'Nama minimal 3 karakter.';
+    if (!/^[\p{L}\s.'-]+$/u.test(v)) return 'Nama hanya boleh berisi huruf.';
+  },
+  email(v) {
+    if (!v) return 'Email wajib diisi.';
+    if (!REGEX_EMAIL.test(v)) return 'Format email tidak valid. Contoh: nama@email.com.';
+  },
+  alamat(v) {
+    if (!v) return 'Alamat pengiriman wajib diisi.';
+    if (v.length < 15) return 'Alamat terlalu singkat. Tulis jalan, RT/RW, kelurahan, dan kota.';
+    if (v.length > 250) return 'Alamat maksimal 250 karakter.';
+  },
+  metode(v) {
+    if (!v) return 'Pilih metode pembayaran.';
+    if (!METODE_BAYAR.includes(v)) return 'Metode pembayaran tidak valid.';
+  },
+  jumlah(v, stok) {
+    if (v === '') return 'Jumlah wajib diisi.';
+    const n = Number(v);
+    if (!Number.isInteger(n) || n < 1) return 'Jumlah minimal 1 dan berupa bilangan bulat.';
+    if (n > stok) return `Jumlah melebihi stok (sisa ${stok}).`;
+  },
+};
+
+export function validateCheckoutField(name, value, stok) {
+  return checkoutRules[name]?.(String(value ?? '').trim(), stok) ?? '';
+}
+
+export function validateCheckout(raw, stok) {
+  const clean = {};
+  for (const k of Object.keys(checkoutRules)) clean[k] = String(raw[k] ?? '').trim();
+  const errors = {};
+  for (const k of Object.keys(checkoutRules)) {
+    const msg = checkoutRules[k](clean[k], stok);
+    if (msg) errors[k] = msg;
+  }
+  const valid = Object.keys(errors).length === 0;
+  return { valid, errors, data: valid ? { ...clean, jumlah: Number(clean.jumlah) } : null };
+}

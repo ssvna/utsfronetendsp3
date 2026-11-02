@@ -9,112 +9,195 @@
   <script type="module" src="js/main.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#daftar-produk">Lewati ke daftar produk</a>
+  <a class="skip-link" href="#konten">Lewati ke konten</a>
 
   <header class="site-header">
     <div class="wrap header-inner">
       <div>
         <h1>Pasar Tani</h1>
-        <p class="tagline">Katalog hasil bumi dari UMKM pertanian lokal</p>
+        <p class="tagline" id="tagline">Hasil bumi segar langsung dari UMKM pertanian lokal</p>
       </div>
-      <button type="button" class="btn btn-primary" id="btn-tambah">Tambah produk</button>
+      <button type="button" class="btn btn-primary" id="btn-mode" aria-pressed="false">Admin</button>
     </div>
   </header>
 
-  <main class="wrap">
-    <section aria-labelledby="judul-ringkasan" class="summary">
-      <h2 id="judul-ringkasan" class="visually-hidden">Ringkasan katalog</h2>
-      <dl id="ringkasan" class="stats"></dl>
-    </section>
+  <main class="wrap" id="konten">
+    <!-- ================= MODE CLIENT ================= -->
+    <div id="view-client">
+      <section aria-labelledby="judul-filter" class="toolbar">
+        <h2 id="judul-filter" class="visually-hidden">Cari dan saring produk</h2>
+        <form id="form-filter" role="search" class="toolbar-form" novalidate>
+          <div class="field">
+            <label for="cari">Cari produk atau penjual</label>
+            <input type="search" id="cari" placeholder="mis. cabai, Pak Slamet">
+          </div>
+          <div class="field">
+            <label for="filter-kategori">Kategori</label>
+            <select id="filter-kategori"></select>
+          </div>
+          <div class="field">
+            <label for="urutan">Urutkan</label>
+            <select id="urutan">
+              <option value="terbaru">Terbaru</option>
+              <option value="harga-asc">Harga termurah</option>
+              <option value="harga-desc">Harga termahal</option>
+              <option value="nama-asc">Nama A–Z</option>
+            </select>
+          </div>
+        </form>
+      </section>
 
-    <section aria-labelledby="judul-filter" class="toolbar">
-      <h2 id="judul-filter" class="visually-hidden">Cari dan saring produk</h2>
-      <form id="form-filter" role="search" class="toolbar-form" novalidate>
-        <div class="field">
-          <label for="cari">Cari produk atau penjual</label>
-          <input type="search" id="cari" placeholder="mis. cabai, Pak Slamet">
-        </div>
-        <div class="field">
-          <label for="filter-kategori">Kategori</label>
-          <select id="filter-kategori"></select>
-        </div>
-        <div class="field">
-          <label for="urutan">Urutkan</label>
-          <select id="urutan">
-            <option value="terbaru">Terbaru</option>
-            <option value="harga-asc">Harga termurah</option>
-            <option value="harga-desc">Harga termahal</option>
-            <option value="nama-asc">Nama A–Z</option>
-          </select>
-        </div>
-      </form>
-    </section>
+      <section aria-labelledby="judul-daftar">
+        <h2 id="judul-daftar" class="visually-hidden">Daftar produk</h2>
+        <p id="info-hasil" class="result-info" aria-live="polite"></p>
+        <div id="grid-produk" class="grid"></div>
+      </section>
+    </div>
 
-    <section aria-labelledby="judul-daftar" id="daftar-produk">
-      <h2 id="judul-daftar" class="visually-hidden">Daftar produk</h2>
-      <p id="info-hasil" class="result-info" aria-live="polite"></p>
-      <div id="grid-produk" class="grid"></div>
-    </section>
+    <!-- ================= MODE ADMIN ================= -->
+    <div id="view-admin" hidden>
+      <section aria-labelledby="judul-ringkasan" class="summary">
+        <h2 id="judul-ringkasan" class="visually-hidden">Ringkasan toko</h2>
+        <dl id="ringkasan" class="stats"></dl>
+      </section>
+
+      <div class="admin-layout">
+        <section class="panel" aria-labelledby="judul-form-produk">
+          <h2 id="judul-form-produk">Tambah produk</h2>
+          <form id="form-produk" novalidate>
+            <input type="hidden" name="id">
+            <div class="form-grid">
+              <div class="field span-2">
+                <label for="nama">Nama produk</label>
+                <input type="text" id="nama" name="nama" required maxlength="60" autocomplete="off">
+                <p class="error" data-error-for="nama"></p>
+              </div>
+              <div class="field">
+                <label for="kategori">Kategori</label>
+                <select id="kategori" name="kategori" required></select>
+                <p class="error" data-error-for="kategori"></p>
+              </div>
+              <div class="field">
+                <label for="satuan">Satuan</label>
+                <select id="satuan" name="satuan" required>
+                  <option value="">Pilih satuan</option>
+                  <option>kg</option><option>ikat</option><option>butir</option><option>botol</option><option>pak</option>
+                </select>
+                <p class="error" data-error-for="satuan"></p>
+              </div>
+              <div class="field">
+                <label for="harga">Harga per satuan (Rp)</label>
+                <input type="number" id="harga" name="harga" min="0" step="100" inputmode="numeric" required>
+                <p class="error" data-error-for="harga"></p>
+              </div>
+              <div class="field">
+                <label for="stok">Stok</label>
+                <input type="number" id="stok" name="stok" min="0" step="1" inputmode="numeric" required>
+                <p class="error" data-error-for="stok"></p>
+              </div>
+              <div class="field">
+                <label for="penjual">Nama penjual / usaha</label>
+                <input type="text" id="penjual" name="penjual" required maxlength="50">
+                <p class="error" data-error-for="penjual"></p>
+              </div>
+              <div class="field">
+                <label for="kontak">WhatsApp penjual</label>
+                <input type="tel" id="kontak" name="kontak" placeholder="08123456789" required>
+                <p class="error" data-error-for="kontak"></p>
+              </div>
+              <div class="field span-2">
+                <label for="deskripsi">Deskripsi</label>
+                <textarea id="deskripsi" name="deskripsi" rows="3" maxlength="200"></textarea>
+                <p class="hint"><span id="hitung">0</span>/200 karakter</p>
+                <p class="error" data-error-for="deskripsi"></p>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn" id="btn-batal-ubah" hidden>Batal ubah</button>
+              <button type="submit" class="btn btn-primary" id="btn-simpan">Tambah produk</button>
+            </div>
+          </form>
+        </section>
+
+        <section aria-labelledby="judul-inventori">
+          <h2 id="judul-inventori">Inventori produk</h2>
+          <div class="table-wrap">
+            <table>
+              <caption class="visually-hidden">Daftar inventori produk</caption>
+              <thead>
+                <tr><th scope="col">Produk</th><th scope="col">Kategori</th><th scope="col">Harga</th><th scope="col">Stok</th><th scope="col">Aksi</th></tr>
+              </thead>
+              <tbody id="tbody-inventori"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <section aria-labelledby="judul-pesanan" class="orders">
+        <h2 id="judul-pesanan">Pesanan masuk</h2>
+        <div class="table-wrap">
+          <table>
+            <caption class="visually-hidden">Daftar pesanan pembeli</caption>
+            <thead>
+              <tr><th scope="col">Kode</th><th scope="col">Pembeli</th><th scope="col">Pesanan</th><th scope="col">Total</th><th scope="col">Pembayaran</th><th scope="col">Status</th><th scope="col">Aksi</th></tr>
+            </thead>
+            <tbody id="tbody-pesanan"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <dialog id="dialog-form" aria-labelledby="judul-dialog">
-    <form id="form-produk" novalidate>
+  <!-- ===== Dialog checkout ===== -->
+  <dialog id="dialog-beli" aria-labelledby="judul-beli">
+    <form id="form-beli" novalidate>
       <header class="dialog-head">
-        <h2 id="judul-dialog">Tambah produk</h2>
-        <button type="button" class="btn-icon" id="btn-tutup" aria-label="Tutup formulir">✕</button>
+        <h2 id="judul-beli">Checkout</h2>
+        <button type="button" class="btn btn-small" id="btn-tutup-beli">Tutup</button>
       </header>
-      <input type="hidden" name="id">
+      <p id="ringkasan-beli" class="order-sum"></p>
+      <input type="hidden" name="productId">
       <div class="form-grid">
         <div class="field span-2">
-          <label for="nama">Nama produk</label>
-          <input type="text" id="nama" name="nama" required maxlength="60" autocomplete="off">
+          <label for="b-nama">Nama lengkap</label>
+          <input type="text" id="b-nama" name="nama" autocomplete="name" required>
           <p class="error" data-error-for="nama"></p>
         </div>
-        <div class="field">
-          <label for="kategori">Kategori</label>
-          <select id="kategori" name="kategori" required></select>
-          <p class="error" data-error-for="kategori"></p>
-        </div>
-        <div class="field">
-          <label for="satuan">Satuan</label>
-          <select id="satuan" name="satuan" required>
-            <option value="">Pilih satuan</option>
-            <option>kg</option><option>ikat</option><option>butir</option><option>botol</option><option>pak</option>
-          </select>
-          <p class="error" data-error-for="satuan"></p>
-        </div>
-        <div class="field">
-          <label for="harga">Harga per satuan (Rp)</label>
-          <input type="number" id="harga" name="harga" min="0" step="100" inputmode="numeric" required>
-          <p class="error" data-error-for="harga"></p>
-        </div>
-        <div class="field">
-          <label for="stok">Stok</label>
-          <input type="number" id="stok" name="stok" min="0" step="1" inputmode="numeric" required>
-          <p class="error" data-error-for="stok"></p>
-        </div>
-        <div class="field">
-          <label for="penjual">Nama penjual / usaha</label>
-          <input type="text" id="penjual" name="penjual" required maxlength="50">
-          <p class="error" data-error-for="penjual"></p>
-        </div>
-        <div class="field">
-          <label for="kontak">WhatsApp penjual</label>
-          <input type="tel" id="kontak" name="kontak" placeholder="08123456789" required>
-          <p class="error" data-error-for="kontak"></p>
+        <div class="field span-2">
+          <label for="b-email">Email</label>
+          <input type="email" id="b-email" name="email" autocomplete="email" required>
+          <p class="error" data-error-for="email"></p>
         </div>
         <div class="field span-2">
-          <label for="deskripsi">Deskripsi</label>
-          <textarea id="deskripsi" name="deskripsi" rows="3" maxlength="200"></textarea>
-          <p class="hint"><span id="hitung">0</span>/200 karakter</p>
-          <p class="error" data-error-for="deskripsi"></p>
+          <label for="b-alamat">Alamat pengiriman</label>
+          <textarea id="b-alamat" name="alamat" rows="3" autocomplete="street-address" required></textarea>
+          <p class="error" data-error-for="alamat"></p>
+        </div>
+        <div class="field">
+          <label for="b-metode">Metode pembayaran</label>
+          <select id="b-metode" name="metode" required></select>
+          <p class="error" data-error-for="metode"></p>
+        </div>
+        <div class="field">
+          <label for="b-jumlah">Jumlah</label>
+          <input type="number" id="b-jumlah" name="jumlah" min="1" step="1" value="1" inputmode="numeric" required>
+          <p class="error" data-error-for="jumlah"></p>
         </div>
       </div>
+      <p class="total-line">Total bayar: <strong id="total-beli">Rp0</strong></p>
       <footer class="dialog-foot">
-        <button type="button" class="btn" id="btn-batal">Batal</button>
-        <button type="submit" class="btn btn-primary">Simpan produk</button>
+        <button type="button" class="btn" id="btn-batal-beli">Batal</button>
+        <button type="submit" class="btn btn-primary">Pesan sekarang</button>
       </footer>
     </form>
+  </dialog>
+
+  <dialog id="dialog-sukses" aria-labelledby="judul-sukses">
+    <div class="success-body">
+      <h2 id="judul-sukses">Pesanan diterima</h2>
+      <p id="sukses-teks"></p>
+      <button type="button" class="btn btn-primary" id="btn-sukses-tutup">Lanjut belanja</button>
+    </div>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>

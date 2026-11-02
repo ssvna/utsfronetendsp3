@@ -66,8 +66,7 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 /* ===== Grid & kartu ===== */
 .result-info { color: var(--teks-lembut); margin: 0 0 .75rem; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; }
-.card { background: var(--kartu); border: 1px solid var(--garis); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; }
-.card-media { display: grid; place-items: center; font-size: 3.2rem; height: 110px; background: var(--hijau-muda); }
+.card { background: var(--kartu); border: 1px solid var(--garis); border-top: 4px solid var(--hijau); border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden; }
 .card-body { padding: 1rem; display: flex; flex-direction: column; gap: .4rem; flex: 1; }
 .card h3 { margin: 0; font-family: var(--font-judul); font-size: 1.2rem; }
 .badge { align-self: flex-start; font-size: .8rem; background: var(--hijau-muda); color: var(--hijau); padding: .1rem .6rem; border-radius: 99px; font-weight: 600; }
@@ -103,3 +102,31 @@ dialog form { padding: 1.25rem 1.5rem; }
   .card { transition: translate .15s, box-shadow .15s; }
   .card:hover { translate: 0 -3px; box-shadow: 0 8px 20px rgb(0 0 0 / .08); }
 }
+
+/* ===== Mode toko & admin ===== */
+[hidden] { display: none !important; }
+.card-actions .btn-primary { flex: 1; text-align: center; }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+.admin-layout { display: grid; grid-template-columns: 340px 1fr; gap: 1.5rem; align-items: start; margin-top: 1.5rem; }
+.panel { background: var(--kartu); border: 1px solid var(--garis); border-radius: var(--radius); padding: 1.1rem 1.25rem; }
+.panel .form-grid { grid-template-columns: 1fr; margin-top: .5rem; }
+.panel .span-2 { grid-column: auto; }
+.panel h2, .admin-layout h2, .orders h2 { font-family: var(--font-judul); margin: 0 0 .75rem; font-size: 1.3rem; }
+.form-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+.orders { margin-block: 2rem; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--garis); border-radius: var(--radius); background: var(--kartu); }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th, td { padding: .6rem .8rem; text-align: left; border-bottom: 1px solid var(--garis); vertical-align: top; }
+tbody tr:last-child td { border-bottom: 0; }
+th { background: var(--hijau-muda); color: var(--hijau); font-size: .85rem; white-space: nowrap; }
+td small { display: block; color: var(--teks-lembut); }
+.row-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+.stok-rendah { color: var(--bahaya); font-weight: 700; }
+.status { font-weight: 600; font-size: .8rem; padding: .1rem .55rem; border-radius: 99px; background: var(--hijau-muda); color: var(--hijau); white-space: nowrap; }
+.status[data-status="Menunggu"] { background: #fbefc9; color: #6b4b00; }
+.cell-empty { text-align: center; color: var(--teks-lembut); padding: 1.5rem; }
+.order-sum { background: var(--hijau-muda); border-radius: 8px; padding: .6rem .9rem; margin: .75rem 0 0; }
+.total-line { text-align: right; font-size: 1.1rem; margin: 1rem 0 0; }
+.success-body { padding: 1.5rem; text-align: center; }
+.success-body h2 { font-family: var(--font-judul); margin-top: 0; }
+@media (max-width: 900px) { .admin-layout { grid-template-columns: 1fr; } }
